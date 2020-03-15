@@ -20,18 +20,25 @@ wlf*
 *.bak
 
 # ignore quartus stuff
+*.qsf
 *.qpf
+*.qws
+*.mpf
+
 *.done
 *.rpt
 *.summary
 
+*.flock
 *.db_info
 *.map*
 
-*/Build/*
-*/db/*
-*/output_files/*
-*/incremental_db/*
+# Match any level of subdirectories
+**/db/
+**/output_files/
+**/incremental_db/
+
+*.jar
 
 cov*/
 transcript*
