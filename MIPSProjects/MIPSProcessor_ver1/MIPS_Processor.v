@@ -162,9 +162,9 @@ ArithmeticLogicUnitControl
 	.ALUOperation(ALUOperation_wire)
 
 );
+
 PC_Register
-ProgramCounter
-(
+ProgramCounter(
 	.clk(clk),
 	.reset(reset),
 	.NewPC(PC_4_wire),
