@@ -13,7 +13,7 @@
 ******************************************************************/
 module Control
 (
-	input [5:0]OP,
+	input [5:0] OP,
 	
 	output RegDst,
 	output BranchEQ,
@@ -23,35 +23,35 @@ module Control
 	output MemWrite,
 	output ALUSrc,
 	output RegWrite,
-	output [2:0]ALUOp
+	output [2:0] ALUOp
 );
 localparam R_Type = 0;
-localparam I_Type_ADDI = 6'h8;
-localparam I_Type_ORI = 6'h0d;
+localparam I_Type_ADDI = 6'h 8;
+localparam I_Type_ORI  = 6'h 0d;
 
 
 reg [10:0] ControlValues;
 
 always@(OP) begin
 	casex(OP)
-		R_Type:       ControlValues= 11'b1_001_00_00_111;
+		R_Type:       ControlValues = 11'b 1_001_00_00_111;
+		I_Type_ADDI:  ControlValues = 11'b 0_101_00_00_100;
+		I_Type_ORI:   ControlValues = 11'b 0_101_00_00_101;
 
-		
-		
 		default:
-			ControlValues= 10'b0000000000;
+			ControlValues= 10'b 0000000000;
 		endcase
 end	
 	
-assign RegDst = ControlValues[10];
-assign ALUSrc = ControlValues[9];
+assign RegDst   = ControlValues[10];
+assign ALUSrc   = ControlValues[9];
 assign MemtoReg = ControlValues[8];
 assign RegWrite = ControlValues[7];
-assign MemRead = ControlValues[6];
+assign MemRead  = ControlValues[6];
 assign MemWrite = ControlValues[5];
 assign BranchNE = ControlValues[4];
 assign BranchEQ = ControlValues[3];
-assign ALUOp = ControlValues[2:0];	
+assign ALUOp    = ControlValues[2:0];	
 
 endmodule
 //control//
