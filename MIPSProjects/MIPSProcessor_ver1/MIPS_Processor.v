@@ -85,7 +85,7 @@ ROMProgramMemory
 
 
 Adder32bits
-PC_Puls_4
+PC_Plus_4
 (
 	.Data0(PC_wire),
 	.Data1(4),
@@ -162,7 +162,14 @@ ArithmeticLogicUnitControl
 	.ALUOperation(ALUOperation_wire)
 
 );
-
+PC_Register
+ProgramCounter
+(
+	.clk(clk),
+	.reset(reset),
+	.NewPC(PC_4_wire),
+	.PCValue(PC_wire)
+);
 
 
 ALU
