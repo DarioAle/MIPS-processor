@@ -10,6 +10,7 @@
 	addi $t5, $zero,  31
 	andi $t5, $t5,    15
 	sll  $t5, $t5, 4
+	srl  $t5, $t5, 4
 	
 	# Moving values
 	add $s0,$t0,$zero
