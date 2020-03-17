@@ -22,7 +22,7 @@ module ALU
 	input [3:0] ALUOperation,
 	input [31:0] A,
 	input [31:0] B,
-	input [5: 0] in_shamt_5,
+	input [4:0] in_shamt_5,
 
 	output reg Zero,
 	output reg [31:0]ALUResult
@@ -39,12 +39,21 @@ localparam SRL = 4'b 0110;
 
 
 
-
+wire [4:0]  w_definitive_shamt_5;
 wire [31:0] w_leftShifted_32;
+
+mux_2To1_shamt ChooseShamt
+(
+	.in_channelA_5 (5'b 10000),
+	 .in_channelB_5(in_shamt_5),
+	.in_selector_5 (in_shamt_5),
+	.out_Zoutput_5 (w_definitive_shamt_5)
+);
+
 
 SLL_32 LeftShifter
 (	.in_data_32(B),
- 	.in_shamt_5(in_shamt_5),
+ 	.in_shamt_5(w_definitive_shamt_5),
  	.out_data_32(w_leftShifted_32)
 );
 

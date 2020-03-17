@@ -32,6 +32,7 @@ localparam R_Type_SRL    = 9'b 111_000010;
 localparam I_Type_ADDI   = 9'b 100_xxxxxx;
 localparam I_Type_ORI    = 9'b 101_xxxxxx;
 localparam I_Type_ANDI   = 9'b 110_xxxxxx;
+localparam I_Type_LUI    = 9'b 000_xxxxxx;
 
 reg  [3:0] ALUControlValues;
 wire [8:0] Selector;
@@ -47,6 +48,8 @@ always@(Selector)begin
 
 		R_Type_SLL :  ALUControlValues = 4'b 0101;
 		R_Type_SRL :  ALUControlValues = 4'b 0110;
+
+		I_Type_LUI :  ALUControlValues = 4'b 0101;
 
 		I_Type_ADDI:  ALUControlValues = 4'b 0011;
 		I_Type_ORI :  ALUControlValues = 4'b 0001;

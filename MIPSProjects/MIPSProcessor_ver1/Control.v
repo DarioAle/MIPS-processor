@@ -29,6 +29,7 @@ localparam R_Type      = 6'h 00;
 localparam I_Type_ADDI = 6'h 08;
 localparam I_Type_ORI  = 6'h 0D;
 localparam I_Type_ANDI = 6'h 0C;
+localparam I_Type_LUI  = 6'h 0F;
 
 reg [10:0] ControlValues;
 
@@ -39,6 +40,9 @@ always@(OP) begin
 		I_Type_ADDI:  ControlValues = 11'b 0_101_00_00_100;
 		I_Type_ORI :  ControlValues = 11'b 0_101_00_00_101;
 		I_Type_ANDI:  ControlValues = 11'b 0_101_00_00_110; // Chose 110 randomly to see if it works, haven't figure out where this bits come from
+
+		I_Type_LUI :  ControlValues = 11'b 0_101_00_00_000; // Chose 110 randomly to see if it works, haven't figure out where this bits come from
+
 		default:
 			ControlValues= 10'b 0000000000;
 		endcase

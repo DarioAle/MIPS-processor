@@ -1,7 +1,8 @@
 	
 	.text
 	# Initializations
-	addi $t0,$zero,2
+	lui  $t0, 0xF
+	ori  $t0,$t0,2
 	addi $t1,$zero,3
 	addi $t2,$zero,7
 	addi $t3,$zero,1
