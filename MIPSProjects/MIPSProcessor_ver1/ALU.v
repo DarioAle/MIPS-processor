@@ -41,6 +41,8 @@ localparam SRL = 4'b 0110;
 
 wire [4:0]  w_definitive_shamt_5;
 wire [31:0] w_leftShifted_32;
+wire [31:0] w_rightShifted_32;
+
 
 mux_2To1_shamt ChooseShamt
 (
@@ -57,6 +59,13 @@ SLL_32 LeftShifter
  	.out_data_32(w_leftShifted_32)
 );
 
+SRL_32 RightShifter
+(	.in_data_32(B),
+ 	.in_shamt_5(in_shamt_5),
+ 	.out_data_32(w_rightShifted_32)
+);
+
+
    always @ (A or B or ALUOperation)
      begin
 		case (ALUOperation)
@@ -72,6 +81,8 @@ SLL_32 LeftShifter
 			ALUResult =   A | B;
 		  SLL:
 		  	ALUResult = w_leftShifted_32;
+		  SRL:
+			ALUResult = w_rightShifted_32;
 
 		default:
 			ALUResult = 0;
