@@ -25,19 +25,20 @@ module Control
 	output RegWrite,
 	output [2:0] ALUOp
 );
-localparam R_Type = 0;
-localparam I_Type_ADDI = 6'h 8;
-localparam I_Type_ORI  = 6'h 0d;
-
+localparam R_Type      = 6'h 00;
+localparam I_Type_ADDI = 6'h 08;
+localparam I_Type_ORI  = 6'h 0D;
+localparam I_Type_ANDI = 6'h 0C;
 
 reg [10:0] ControlValues;
 
 always@(OP) begin
 	casex(OP)
-		R_Type:       ControlValues = 11'b 1_001_00_00_111;
-		I_Type_ADDI:  ControlValues = 11'b 0_101_00_00_100;
-		I_Type_ORI:   ControlValues = 11'b 0_101_00_00_101;
+		R_Type     :  ControlValues = 11'b 1_001_00_00_111;
 
+		I_Type_ADDI:  ControlValues = 11'b 0_101_00_00_100;
+		I_Type_ORI :  ControlValues = 11'b 0_101_00_00_101;
+		I_Type_ANDI:  ControlValues = 11'b 0_101_00_00_110; // Chose 110 randomly to see if it works, haven't figure out where this bits come from
 		default:
 			ControlValues= 10'b 0000000000;
 		endcase
