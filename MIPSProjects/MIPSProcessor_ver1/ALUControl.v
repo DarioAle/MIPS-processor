@@ -16,6 +16,7 @@ module ALUControl
 (
 	input  [2:0] ALUOp,
 	input  [5:0] ALUFunction,
+
 	output [3:0] ALUOperation
 
 );
@@ -43,6 +44,9 @@ always@(Selector)begin
 		R_Type_OR  :  ALUControlValues = 4'b 0001;
 		R_Type_NOR :  ALUControlValues = 4'b 0010;
 		R_Type_ADD :  ALUControlValues = 4'b 0011;
+
+		R_Type_SLL :  ALUControlValues = 4'b 0101;
+		R_Type_SRL :  ALUControlValues = 4'b 0110;
 
 		I_Type_ADDI:  ALUControlValues = 4'b 0011;
 		I_Type_ORI :  ALUControlValues = 4'b 0001;
