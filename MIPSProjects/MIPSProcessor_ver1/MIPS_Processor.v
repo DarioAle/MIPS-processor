@@ -29,15 +29,21 @@ assign  PortOut = 0;
 //******************************************************************/
 //******************************************************************/
 // Data types to connect modules
-wire BranchNE_wire;
-wire BranchEQ_wire;
+wire w_BranchType;
+wire w_BranchEn;
 wire RegDst_wire;
 wire NotZeroANDBrachNE;
 wire ZeroANDBrachEQ;
+
 wire ORForBranch;
 wire ALUSrc_wire;
 wire RegWrite_wire;
 wire Zero_wire;
+
+wire w_branchingControlSignal;
+wire [31:0] w_MuxBranchingOut_32;
+wire [31:0] w_AdderBranching_32;
+
 wire [2:0] ALUOp_wire;
 wire [3:0] ALUOperation_wire;
 wire [4:0] WriteRegister_wire;
@@ -65,8 +71,8 @@ ControlUnit
 (
 	.OP(Instruction_wire[31:26]),
 	.RegDst(RegDst_wire),
-	.BranchNE(BranchNE_wire),
-	.BranchEQ(BranchEQ_wire),
+	.BranchType(w_BranchType),
+	.BranchEn(w_BranchEn),
 	.ALUOp(ALUOp_wire),
 	.ALUSrc(ALUSrc_wire),
 	.RegWrite(RegWrite_wire)
@@ -167,7 +173,7 @@ PC_Register
 ProgramCounter(
 	.clk(clk),
 	.reset(reset),
-	.NewPC(PC_4_wire),
+	.NewPC(w_MuxBranchingOut_32),
 	.PCValue(PC_wire)
 );
 
@@ -182,6 +188,47 @@ Arithmetic_Logic_Unit
 	.Zero(Zero_wire),
 	.ALUResult(ALUResult_wire)
 );
+
+//******************************************************************/
+//******************************************************************/
+//******************************************************************/
+//******************************************************************/
+//**************         Branching logic        ********************/
+
+
+Adder32bits
+PC_Plus_Branching_Offset
+(
+	.Data0(PC_4_wire),
+	.Data1({InmmediateExtend_wire[29:0], 2'b 00}),
+	
+	.Result(w_AdderBranching_32)
+
+
+);
+
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForBranchingControl
+(
+	.Selector(w_branchingControlSignal),
+	.MUX_Data0(PC_4_wire),
+	.MUX_Data1(w_AdderBranching_32),
+	
+	.MUX_Output(w_MuxBranchingOut_32)
+
+);
+
+assign w_branchingControlSignal = w_BranchEn & ~(w_BranchType ^ Zero_wire);
+
+//******************************************************************/
+//******************************************************************/
+//******************************************************************/
+//******************************************************************/
+//******************************************************************/
 
 assign ALUResultOut = ALUResult_wire;
 

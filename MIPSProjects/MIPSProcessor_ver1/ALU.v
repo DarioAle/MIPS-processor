@@ -19,13 +19,13 @@
 
 module ALU 
 (
-	input [3:0] ALUOperation,
+	input [3:0]  ALUOperation,
 	input [31:0] A,
 	input [31:0] B,
-	input [4:0] in_shamt_5,
+	input [4:0]  in_shamt_5,
 
 	output reg Zero,
-	output reg [31:0]ALUResult
+	output reg [31:0] ALUResult
 );
 
 localparam AND = 4'b 0000;
