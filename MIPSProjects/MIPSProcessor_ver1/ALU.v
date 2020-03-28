@@ -87,7 +87,7 @@ SRL_32 RightShifter
 		default:
 			ALUResult = 0;
 		endcase // case(control)
-		Zero = (ALUResult == 0) ? 1'b1 : 1'b0;
+		Zero = (ALUResult == 0) ? 1'b 1 : 1'b 0;
      end // always @ (A or B or control)
 endmodule 
 // alu//

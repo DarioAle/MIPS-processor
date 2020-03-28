@@ -29,7 +29,7 @@ always@(negedge reset or posedge clk) begin
 	if(reset==0)
 		PCValue <= 0;
 	else	
-		PCValue<=NewPC;
+		PCValue <= {12'h 0,NewPC[19 : 0]};
 end
 
 endmodule

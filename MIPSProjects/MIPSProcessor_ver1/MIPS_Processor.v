@@ -32,10 +32,9 @@ assign  PortOut = 0;
 wire w_BranchType;
 wire w_BranchEn;
 wire RegDst_wire;
-wire NotZeroANDBrachNE;
-wire ZeroANDBrachEQ;
 
-wire ORForBranch;
+
+
 wire ALUSrc_wire;
 wire RegWrite_wire;
 wire Zero_wire;
@@ -43,6 +42,18 @@ wire Zero_wire;
 wire w_branchingControlSignal;
 wire [31:0] w_MuxBranchingOut_32;
 wire [31:0] w_AdderBranching_32;
+
+wire w_jumpControlSignal;
+wire w_jumpAndLinkControl;
+wire [31:0] w_MuxJumpingOut_32;
+wire [4:0] w_MuxSelectRA_5;
+
+wire [31:0] w_adderPlus8_32;
+
+wire [31:0] w_writeDataRegisterFile_32;
+
+wire w_jumprRegisterControl;
+wire [31:0] w_jumRegisterToPC_32;
 
 wire [2:0] ALUOp_wire;
 wire [3:0] ALUOperation_wire;
@@ -56,8 +67,8 @@ wire [31:0] InmmediateExtend_wire;
 wire [31:0] ReadData2OrInmmediate_wire;
 wire [31:0] ALUResult_wire;
 wire [31:0] PC_4_wire;
-wire [31:0] InmmediateExtendAnded_wire;
-wire [31:0] PCtoBranch_wire;
+
+
 integer ALUStatus;
 
 
@@ -75,7 +86,8 @@ ControlUnit
 	.BranchEn(w_BranchEn),
 	.ALUOp(ALUOp_wire),
 	.ALUSrc(ALUSrc_wire),
-	.RegWrite(RegWrite_wire)
+	.RegWrite(RegWrite_wire),
+	.Jump(w_jumpControlSignal)
 );
 
 
@@ -127,10 +139,10 @@ Register_File
 	.clk(clk),
 	.reset(reset),
 	.RegWrite(RegWrite_wire),
-	.WriteRegister(WriteRegister_wire),
+	.WriteRegister(w_MuxSelectRA_5),
 	.ReadRegister1(Instruction_wire[25:21]),
 	.ReadRegister2(Instruction_wire[20:16]),
-	.WriteData(ALUResult_wire),
+	.WriteData(w_writeDataRegisterFile_32),
 	.ReadData1(ReadData1_wire),
 	.ReadData2(ReadData2_wire)
 
@@ -165,7 +177,8 @@ ArithmeticLogicUnitControl
 (
 	.ALUOp(ALUOp_wire),
 	.ALUFunction(Instruction_wire[5:0]),
-	.ALUOperation(ALUOperation_wire)
+	.ALUOperation(ALUOperation_wire),
+	.o_JumpRegister(w_jumprRegisterControl)
 
 );
 
@@ -173,7 +186,7 @@ PC_Register
 ProgramCounter(
 	.clk(clk),
 	.reset(reset),
-	.NewPC(w_MuxBranchingOut_32),
+	.NewPC(w_jumRegisterToPC_32),
 	.PCValue(PC_wire)
 );
 
@@ -189,9 +202,7 @@ Arithmetic_Logic_Unit
 	.ALUResult(ALUResult_wire)
 );
 
-//******************************************************************/
-//******************************************************************/
-//******************************************************************/
+
 //******************************************************************/
 //**************         Branching logic        ********************/
 
@@ -226,9 +237,73 @@ assign w_branchingControlSignal = w_BranchEn & ~(w_BranchType ^ Zero_wire);
 
 //******************************************************************/
 //******************************************************************/
+//**************         Jump logic        ********************/
+
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForJumpControl
+(
+	.Selector(w_jumpControlSignal),
+	.MUX_Data0(w_MuxBranchingOut_32),
+	.MUX_Data1({PC_4_wire[31:28], Instruction_wire[25:0], 2'b 00}),
+	
+	.MUX_Output(w_MuxJumpingOut_32)
+
+);
+
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)MUX_JumpAndLink
+(
+
+	.Selector(w_jumpAndLinkControl),
+	.MUX_Data0(ALUResult_wire),
+	.MUX_Data1(PC_4_wire),
+	
+	.MUX_Output(w_writeDataRegisterFile_32)
+);
+
+
+Multiplexer2to1
+#(
+	.NBits(5)
+)MUX_WriteToRegister_RA
+(
+
+	.Selector(w_jumpAndLinkControl),
+	.MUX_Data0(WriteRegister_wire),
+	.MUX_Data1(5'd 31),
+	
+	.MUX_Output(w_MuxSelectRA_5)
+);
+
+// Multiplexer between the jum to content of register or result of other muxes
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForJumpToContentOfRegister
+(
+	.Selector(w_jumprRegisterControl),
+	.MUX_Data0(w_MuxJumpingOut_32),
+	.MUX_Data1(ReadData1_wire),
+	
+	.MUX_Output(w_jumRegisterToPC_32)
+
+);
+
+assign w_jumpAndLinkControl = RegWrite_wire & w_jumpControlSignal;
+
+
 //******************************************************************/
 //******************************************************************/
-//******************************************************************/
+
 
 assign ALUResultOut = ALUResult_wire;
 

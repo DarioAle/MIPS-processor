@@ -27,6 +27,8 @@ module Control
 	output ALUSrc,
 	output RegWrite,
 
+	output Jump,
+
 	output [2:0] ALUOp
 );
 localparam R_Type      = 6'h 00;
@@ -38,18 +40,23 @@ localparam I_Type_ANDI = 6'h 0C;
 localparam I_Type_LUI  = 6'h 0F;
 
 localparam I_Type_BEQ  = 6'h 04;
-localparam I_Type_BNE  = 6'h 05;  
+localparam I_Type_BNE  = 6'h 05; 
 
-reg [10:0] ControlValues;
+localparam I_Type_LW   = 6'h 23;
+
+localparam J_Type_J    = 6'h 02;
+localparam J_Type_JAL  = 6'h 03;  
+
+reg [11:0] ControlValues;
 
 always@(OP) begin
 	casex(OP)
-	//       RegDst  ALUsrc   MemToReg    RegWrite    MemRead    MemWrite   BranchEn    BranchType   ALUOp
-		R_Type     :  ControlValues = 11'b 1_001_00_00_111;
+	            //  Jump     RegDst  ALUsrc   MemToReg    RegWrite    MemRead    MemWrite   BranchEn    BranchType   ALUOp
+		R_Type     :  ControlValues = 12'b 0_1_001_00_00_111;
 
-		I_Type_ADDI:  ControlValues = 11'b 0_101_00_00_100;
-		I_Type_ORI :  ControlValues = 11'b 0_101_00_00_101;
-		I_Type_ANDI:  ControlValues = 11'b 0_101_00_00_110; // Chose 110 randomly to see if it works, haven't figure out where this bits come from
+		I_Type_ADDI:  ControlValues = 12'b 0_0_101_00_00_100;
+		I_Type_ORI :  ControlValues = 12'b 0_0_101_00_00_101;
+		I_Type_ANDI:  ControlValues = 12'b 0_0_101_00_00_110; // Chose 110 randomly to see if it works, haven't figure out where this bits come from
 
 		// RegDst   0, we don't write to register [15-11]
 		// ALUsrc   0, we don't read from immediate
@@ -59,19 +66,25 @@ always@(OP) begin
 		// MemWrite 0, we don't write either
 
 		// Enable Branching
-		// Branch Type it's a branch on Equal 1
+		// Branch Type -> it's  beq 1 | bne
 
 		// ALU OP it's a substraction code 001
-		I_Type_BEQ:   ControlValues = 11'b 0_000_00_11_001;
-		I_Type_BNE:   ControlValues = 11'b 0_000_00_10_001;               
+		I_Type_BEQ :   ControlValues = 12'b 0_0_000_00_11_001;
+		I_Type_BNE :   ControlValues = 12'b 0_0_000_00_10_001;
 
-		I_Type_LUI :  ControlValues = 11'b 0_101_00_00_000; // Chose 110 randomly to see if it works, haven't figure out where this bits come from
+		J_Type_J   :   ControlValues = 12'b 1_0_000_00_00_010;
+		J_Type_JAL :   ControlValues = 12'b 1_0_001_00_00_010;      // we send two as alu op to force no operation      
+
+		I_Type_LUI :   ControlValues = 12'b 0_0_101_00_00_000;
+		I_Type_LW  :   ControlValues = 12'b 0_0_111_10_00_011;
+
 
 		default:
-			ControlValues= 10'b 0000000000;
+			ControlValues= 12'b 000000000000;
 		endcase
 end	
-	
+
+assign Jump       = ControlValues[11];
 assign RegDst     = ControlValues[10];
 assign ALUSrc     = ControlValues[9];
 assign MemtoReg   = ControlValues[8];
