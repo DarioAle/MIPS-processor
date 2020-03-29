@@ -68,6 +68,12 @@ wire [31:0] ReadData2OrInmmediate_wire;
 wire [31:0] ALUResult_wire;
 wire [31:0] PC_4_wire;
 
+wire w_memToRegister;
+wire w_memRead;
+wire w_memWrite;
+wire [31:0] w_FromExternalMemToMux_32;
+wire [31:0] w_writeRegisterFileFromMemOrALu_32;
+
 
 integer ALUStatus;
 
@@ -87,7 +93,10 @@ ControlUnit
 	.ALUOp(ALUOp_wire),
 	.ALUSrc(ALUSrc_wire),
 	.RegWrite(RegWrite_wire),
-	.Jump(w_jumpControlSignal)
+	.Jump(w_jumpControlSignal),
+	.MemRead(w_memRead),
+	.MemtoReg(w_memToRegister),
+	.MemWrite(w_memWrite)
 );
 
 
@@ -254,7 +263,7 @@ MUX_ForJumpControl
 
 );
 
-
+// Write the contents of program counter if the jal it{s enable}
 Multiplexer2to1
 #(
 	.NBits(32)
@@ -262,9 +271,8 @@ Multiplexer2to1
 (
 
 	.Selector(w_jumpAndLinkControl),
-	.MUX_Data0(ALUResult_wire),
+	.MUX_Data0(w_writeRegisterFileFromMemOrALu_32),
 	.MUX_Data1(PC_4_wire),
-	
 	.MUX_Output(w_writeDataRegisterFile_32)
 );
 
@@ -303,8 +311,42 @@ assign w_jumpAndLinkControl = RegWrite_wire & w_jumpControlSignal;
 
 //******************************************************************/
 //******************************************************************/
+// ************************ External memory *********************** //
 
 
+
+DataMemory 
+#(	
+	.DATA_WIDTH(32),
+	.MEMORY_DEPTH(8)
+)
+RAM_External
+(
+	 .WriteData(ReadData2_wire),
+	 .Address(ALUResult_wire[15:0]),
+	 .MemWrite(w_memWrite),
+	 .MemRead(w_memRead),
+	 .clk(clk),
+	 .ReadData(w_FromExternalMemToMux_32)
+);
+
+// If mem to rregister we write register from memory
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+writeRegisterSource
+(
+	.Selector(w_memToRegister),
+	.MUX_Data0(ALUResult_wire),
+	.MUX_Data1(w_FromExternalMemToMux_32),
+	
+	.MUX_Output(w_writeRegisterFileFromMemOrALu_32)
+
+);
+
+//******************************************************************/
+//******************************************************************/
 assign ALUResultOut = ALUResult_wire;
 
 

@@ -11,14 +11,16 @@
 ******************************************************************/
 
 module DataMemory 
-#(	parameter DATA_WIDTH=8,
-	parameter MEMORY_DEPTH = 1024
+#(	parameter DATA_WIDTH   = 32,
+	parameter MEMORY_DEPTH = 8
 
 )
 (
 	input [DATA_WIDTH-1:0] WriteData,
-	input [DATA_WIDTH-1:0]  Address,
-	input MemWrite,MemRead, clk,
+	input [MEMORY_DEPTH-1:0]  Address,
+	input MemWrite,
+	input MemRead,
+	input clk,
 	output  [DATA_WIDTH-1:0]  ReadData
 );
 	

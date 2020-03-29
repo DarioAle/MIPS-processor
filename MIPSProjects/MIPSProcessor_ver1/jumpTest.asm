@@ -21,7 +21,7 @@ ten:	addi $t4, $zero, 10
 	
 
 
-somewhere:	addi $t4, $zero 0xFE0
+somewhere:addi $t4, $zero 0xFE0
 	addi $t4, $zero 0xFEA
 	addi $t4, $zero 0xCA7
 	addi $t4, $zero 0xD02

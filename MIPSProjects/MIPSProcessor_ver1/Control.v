@@ -43,6 +43,7 @@ localparam I_Type_BEQ  = 6'h 04;
 localparam I_Type_BNE  = 6'h 05; 
 
 localparam I_Type_LW   = 6'h 23;
+localparam I_Type_SW   = 6'h 2B;
 
 localparam J_Type_J    = 6'h 02;
 localparam J_Type_JAL  = 6'h 03;  
@@ -77,7 +78,7 @@ always@(OP) begin
 
 		I_Type_LUI :   ControlValues = 12'b 0_0_101_00_00_000;
 		I_Type_LW  :   ControlValues = 12'b 0_0_111_10_00_011;
-
+		I_Type_SW  :   ControlValues = 12'b 0_0_100_01_00_011;
 
 		default:
 			ControlValues= 12'b 000000000000;

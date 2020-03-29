@@ -17,7 +17,7 @@ add wave -noupdate -divider Register_Ra
 add wave -noupdate -radix unsigned /MIPS_Processor_TB/DUV/Register_File/WriteRegister
 add wave -noupdate -radix hexadecimal /MIPS_Processor_TB/DUV/Register_File/WriteData
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {64 ps} 0}
+WaveRestoreCursors {{Cursor 1} {85 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -33,4 +33,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {11 ps} {35 ps}
+WaveRestoreZoom {0 ps} {220 ps}
