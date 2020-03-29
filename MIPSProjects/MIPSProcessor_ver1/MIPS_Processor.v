@@ -10,7 +10,7 @@
 
 module MIPS_Processor
 #(
-	parameter MEMORY_DEPTH = 32
+	parameter MEMORY_DEPTH = 56
 )
 
 (
@@ -161,6 +161,7 @@ SignExtend
 SignExtendForConstants
 (   
 	.DataInput(Instruction_wire[15:0]),
+	.i_Instruction(Instruction_wire[31:26]),
    .SignExtendOutput(InmmediateExtend_wire)
 );
 
@@ -318,12 +319,12 @@ assign w_jumpAndLinkControl = RegWrite_wire & w_jumpControlSignal;
 DataMemory 
 #(	
 	.DATA_WIDTH(32),
-	.MEMORY_DEPTH(8)
+	.MEMORY_DEPTH(256)
 )
 RAM_External
 (
 	 .WriteData(ReadData2_wire),
-	 .Address(ALUResult_wire[15:0]),
+	 .Address({24'b 0,ALUResult_wire[7:0]}),
 	 .MemWrite(w_memWrite),
 	 .MemRead(w_memRead),
 	 .clk(clk),
