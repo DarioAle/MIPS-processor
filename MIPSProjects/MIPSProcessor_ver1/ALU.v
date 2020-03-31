@@ -47,7 +47,7 @@ wire [31:0] w_rightShifted_32;
 mux_2To1_shamt ChooseShamt
 (
 	.in_channelA_5 (5'b 10000),
-	 .in_channelB_5(in_shamt_5),
+	.in_channelB_5(in_shamt_5),
 	.in_selector_5 (in_shamt_5),
 	.out_Zoutput_5 (w_definitive_shamt_5)
 );
@@ -66,7 +66,7 @@ SRL_32 RightShifter
 );
 
 
-   always @ (A or B or ALUOperation)
+   always @ (A or B or ALUOperation or w_leftShifted_32 or w_rightShifted_32)
      begin
 		case (ALUOperation)
 		  ADD: // add

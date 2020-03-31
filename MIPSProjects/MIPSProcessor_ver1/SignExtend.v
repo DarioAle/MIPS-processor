@@ -19,7 +19,9 @@ module SignExtend
     output[31:0] SignExtendOutput
 );
 
-assign  SignExtendOutput = (i_Instruction == 6'h c || i_Instruction == 6'h d) ? {16'b 0, DataInput[15:0]} : {{16{DataInput[15]}},DataInput[15:0]};
+assign  SignExtendOutput = (i_Instruction == 6'h c ||
+                            i_Instruction == 6'h d) ?  {16'b 0, DataInput[15:0]} :
+                                                       {{16{DataInput[15]}},DataInput[15:0]};
 
 endmodule 
 // signextend//

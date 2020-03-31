@@ -10,7 +10,7 @@
 
 module MIPS_Processor
 #(
-	parameter MEMORY_DEPTH = 56
+	parameter MEMORY_DEPTH = 64
 )
 
 (
@@ -264,7 +264,7 @@ MUX_ForJumpControl
 
 );
 
-// Write the contents of program counter if the jal it{s enable}
+// Write the contents of program counter if the jal it's enable
 Multiplexer2to1
 #(
 	.NBits(32)
@@ -291,7 +291,10 @@ Multiplexer2to1
 	.MUX_Output(w_MuxSelectRA_5)
 );
 
-// Multiplexer between the jum to content of register or result of other muxes
+assign w_jumpAndLinkControl = RegWrite_wire & w_jumpControlSignal;
+
+
+// Multiplexer between the jump to content of register or result of other muxes
 
 Multiplexer2to1
 #(
@@ -307,14 +310,10 @@ MUX_ForJumpToContentOfRegister
 
 );
 
-assign w_jumpAndLinkControl = RegWrite_wire & w_jumpControlSignal;
-
 
 //******************************************************************/
 //******************************************************************/
 // ************************ External memory *********************** //
-
-
 
 DataMemory 
 #(	
@@ -331,7 +330,7 @@ RAM_External
 	 .ReadData(w_FromExternalMemToMux_32)
 );
 
-// If mem to rregister we write register from memory
+// If mem to register we write register from memory
 Multiplexer2to1
 #(
 	.NBits(32)

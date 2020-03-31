@@ -15,7 +15,7 @@
 module ProgramMemory
 #
 (
-	parameter MEMORY_DEPTH = 50,
+	parameter MEMORY_DEPTH = 51,
 	parameter DATA_WIDTH   = 32
 )
 (
