@@ -62,7 +62,7 @@ always@(Selector)begin
 
 		R_Type_JR :   ALUControlValues = 4'b 1001; // we assign the same as default value, we don't want to perform operations
 
-		I_Type_LUI :  ALUControlValues = 4'b 0101;
+		I_Type_LUI :  ALUControlValues = 4'b 0111;
 		I_Type_LW  :  ALUControlValues = 4'b 0011; // We add sign extend and address in register to get definitive address 
 
 		I_Type_ADDI:  ALUControlValues = 4'b 0011;

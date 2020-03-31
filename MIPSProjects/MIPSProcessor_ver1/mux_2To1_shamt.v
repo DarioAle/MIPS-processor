@@ -21,7 +21,7 @@ module mux_2To1_shamt
 );
 
 
-	assign out_Zoutput_5 = (in_selector_5 == 0) ? in_channelA_5 : in_channelB_5;
+	assign out_Zoutput_5 = (in_selector_5 == 5'b 00111) ? in_channelB_5 : in_channelA_5;
 
 endmodule
 //andgate//

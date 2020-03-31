@@ -13,7 +13,7 @@
 .text
 
 Main:		
-#		lui $t8, 0x10AF		
+	
 		addi $sp, $zero, 0x7FFF
 		sll $sp,  $sp, 16 
 		ori $sp, $sp, 0xEFFC 

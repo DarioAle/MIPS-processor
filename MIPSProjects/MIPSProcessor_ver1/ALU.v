@@ -37,6 +37,7 @@ localparam SUB = 4'b 0100;
 localparam SLL = 4'b 0101;
 localparam SRL = 4'b 0110;
 
+localparam LUI = 4'b 0111;
 
 
 wire [4:0]  w_definitive_shamt_5;
@@ -46,9 +47,9 @@ wire [31:0] w_rightShifted_32;
 
 mux_2To1_shamt ChooseShamt
 (
-	.in_channelA_5 (5'b 10000),
-	.in_channelB_5(in_shamt_5),
-	.in_selector_5 (in_shamt_5),
+	.in_channelA_5 (in_shamt_5),
+	.in_channelB_5(5'b 10000),
+	.in_selector_5 ({1'b 0,ALUOperation}),
 	.out_Zoutput_5 (w_definitive_shamt_5)
 );
 
@@ -80,6 +81,8 @@ SRL_32 RightShifter
 		  OR:
 			ALUResult =   A | B;
 		  SLL:
+		  	ALUResult = w_leftShifted_32;
+		  LUI:
 		  	ALUResult = w_leftShifted_32;
 		  SRL:
 			ALUResult = w_rightShifted_32;
