@@ -19,13 +19,13 @@ module RegisterFile
 (
 	input clk,
 	input reset,
-	input RegWrite,
-	input [4:0] WriteRegister,
-	input [4:0] ReadRegister1,
-	input [4:0] ReadRegister2,
-	input  [31:0] WriteData,
-	output [31:0] ReadData1,
-	output [31:0] ReadData2
+	input RegWrite,             // Habilitador de escritura general
+	input [4:0] WriteRegister,  // Dirección del registro a escribir
+	input [4:0] ReadRegister1,  // Dirección del registro a leer1
+ 	input [4:0] ReadRegister2,  // Dirección del registro a leer2
+	input  [31:0] WriteData,    // Dato a escribir
+	output [31:0] ReadData1,    // SALIDA dato leído1
+	output [31:0] ReadData2     // Dato leído 2
 
 );
 
