@@ -33,7 +33,7 @@ initial // Clock generator
   end
 /*********************************************************/
 initial begin // reset generator
-	#5 reset = 1;
+	#3 reset = 1;
 end
 
 endmodule

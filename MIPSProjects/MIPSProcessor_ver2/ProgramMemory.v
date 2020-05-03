@@ -30,7 +30,7 @@ reg [DATA_WIDTH-1:0] rom [MEMORY_DEPTH-1:0];
 
 initial
 	begin
-		$readmemh("C:\\Arqui\\MIPSProjects\\MIPSProcessor_ver1\\text.dat", rom);
+		$readmemh("C:\\Arqui\\MIPSProjects\\MIPSProcessor_ver2\\text.dat", rom);
 	end
 
 always @ (RealAddress)
