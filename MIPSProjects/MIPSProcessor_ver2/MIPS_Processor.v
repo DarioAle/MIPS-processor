@@ -441,7 +441,7 @@ writeRegisterSource
 // #(
 // 	.N(64)
 // )
-// IF_ID_Register
+// EX_MEM_Register
 // (
 
 // 	.clk(clk),
@@ -453,8 +453,6 @@ writeRegisterSource
 // );
 //******************************************************************/
 //********************    Write Back        ************************/
-
-
 
 assign ALUResultOut = w_ALUResult_32;
 
