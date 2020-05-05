@@ -46,7 +46,7 @@ wire [31:0] w_ID_R_Out_Plus4_32;
 wire [31:0] w_ID_R_Out_ReadData1_32;
 wire [31:0] w_ID_R_Out_ReadData2_32;
 wire [31:0] w_ID_R_Out_SignExtend_32; 
-wire [25:0] w_ID_R_Out_JumpAddres_26;
+wire [25:0] w_ID_R_Out_Instruction_26;
 wire [4:0]  w_ID_R_Out_WriteAdd1_5;
 wire [4:0]  w_ID_R_Out_WriteAdd2_5;
 
@@ -71,8 +71,8 @@ wire [31:0] w_AdderBranching_32;
 
 // Jumping wires
 wire w_jumpControlSignal;
-wire w_jumpAndLinkControl;
-wire w_jumprRegisterControl;
+wire w_jumpAndLinkCtrl;
+wire w_jumprRegisterCtrl;
 wire [31:0] w_MuxJumpingOut_32;
 wire [4:0]  w_MuxSelectRA_5;
 wire [31:0] w_jumRegisterToPC_32;
@@ -111,14 +111,55 @@ integer ALUStatus;
 //******************************************************************/
 //************     Instruction Fetch Stage        ******************/
 
-ProgramMemory
-#(
-	.MEMORY_DEPTH(MEMORY_DEPTH)
+Multiplexer2to1
+#(  
+	.NBits(32)
 )
-ROMProgramMemory
+MUX_ForBranchingControl
 (
-	.Address(w_PC_wireToROM_32),
-	.Instruction(w_Instruction_32)
+	.in_Selector(w_branchingControlSignal),
+	.MUX_Data0_dw(w_PC_wirePlus4_32),
+	.MUX_Data1_dw(w_AdderBranching_32),
+	
+	.MUX_Output_dw(w_MuxBranchingOut_32)
+
+);
+
+assign w_branchingControlSignal = w_EX_R_Out_BranchEnable & ~(w_EX_R_Out_BranchType ^ w_Zero);
+
+// --------------------------- Jump logic
+
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForJumpControl
+(
+	.in_Selector(w_ID_R_Out_jumpCtrl),
+	.MUX_Data0_dw(w_MuxBranchingOut_32),
+	.MUX_Data1_dw({w_ID_R_Out_Plus4_32[31:28], w_ID_R_Out_Instruction_32[25:0], 2'b 00}),
+	
+	.MUX_Output_dw(w_MuxJumpingOut_32)
+
+);
+
+
+
+// Multiplexer between the jump to content of register or result of other muxes
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForJumpToContentOfRegister
+(
+	.in_Selector(w_jumprRegisterCtrl),
+	.MUX_Data0_dw(w_MuxJumpingOut_32),
+	.MUX_Data1_dw(w_ID_R_Out_ReadData1_32),
+	
+	.MUX_Output_dw(w_jumRegisterToPC_32)
+
 );
 
 PC_Register
@@ -129,6 +170,18 @@ ProgramCounter(
 
 	.o_PCValue_dw(w_PC_wireToROM_32)
 );
+
+
+ProgramMemory
+#(
+	.MEMORY_DEPTH(MEMORY_DEPTH)
+)
+ROMProgramMemory
+(
+	.Address(w_PC_wireToROM_32),
+	.Instruction(w_Instruction_32)
+);
+
 
 
 Adder32bits
@@ -175,12 +228,44 @@ ControlUnit
 	.o_MemWrite(w_memWrite)
 );
 
+
+// Write the contents of program counter if the jal it's enable
+Multiplexer2to1
+#(
+	.NBits(32)
+)MUX_JumpAndLink
+(
+
+	.in_Selector(w_jumpAndLinkCtrl),
+	.MUX_Data0_dw(w_writeRegisterFileFromMemOrALu_32),
+	.MUX_Data1_dw(w_ID_R_Out_Plus4_32),
+
+	.MUX_Output_dw(w_writeDataRegisterFile_32)
+);
+
+
+Multiplexer2to1
+#(
+	.NBits(5)
+)MUX_WriteToRegister_RA
+(
+
+	.in_Selector(w_jumpAndLinkCtrl),
+	.MUX_Data0_dw(w_MEM_R_Out_WriteRegisterAddress_5),
+	.MUX_Data1_dw(5'd 31),
+	
+	.MUX_Output_dw(w_MuxSelectRA_5)
+);
+
+assign w_jumpAndLinkCtrl =  w_ID_R_Out_RegWrite & w_ID_R_Out_jumpCtrl;
+
+
 RegisterFile
 Register_File
 (
 	.clk(clk),
 	.reset(reset),
-	.RegWrite(w_ID_R_Out_RegWrite),
+	.RegWrite(w_RegWriteOR),
 	.in_WriteRegister_5(w_MuxSelectRA_5),
 	.in_ReadRegister1_5(w_IF_R_Out_Instruction_32[25:21]),
 	.in_ReadRegister2_5(w_IF_R_Out_Instruction_32[20:16]),
@@ -190,6 +275,8 @@ Register_File
 	.o_ReadData2_32(w_ReadData2_32)
 
 );
+
+assign w_RegWriteOR = w_jumpAndLinkCtrl | w_MEM_R_Out_RegWrite;
 
 SignExtend
 SignExtendForConstants
@@ -202,7 +289,7 @@ SignExtendForConstants
 
 RegisterPipeline
 #(
-	.N(176)
+	.N(166)
 )
 ID_EX_Register
 (
@@ -226,8 +313,6 @@ ID_EX_Register
 						w_ReadData1_32,
 						w_ReadData2_32,
 						w_InmmediateExtend_32,
-						w_IF_R_Out_Instruction_32[20:16],
-						w_IF_R_Out_Instruction_32[15:11],
 						w_IF_R_Out_Instruction_32[25:0]
 					}
 		),
@@ -235,10 +320,12 @@ ID_EX_Register
 	.DataOutput_dw(
 					{ w_ID_R_Out_RegWrite,
 					  w_ID_R_Out_memToReg,
+					 
 					  w_ID_R_Out_memRead,
 					  w_ID_R_Out_memWrite,
 					  w_ID_R_Out_BranchType,
 					  w_ID_R_Out_BranchEn,
+					  
 					  w_ID_R_Out_jumpCtrl,
 					  w_ID_R_Out_ALUop_3,
 					  w_ID_R_Out_AlUsrc,
@@ -247,15 +334,11 @@ ID_EX_Register
 					  w_ID_R_Out_ReadData1_32,
 					  w_ID_R_Out_ReadData2_32,
 					  w_ID_R_Out_SignExtend_32,
-					  w_ID_R_Out_WriteAdd1_5,
-					  w_ID_R_Out_WriteAdd2_5,
-					  w_ID_R_Out_JumpAddres_26
+					  w_ID_R_Out_Instruction_26
 					}
 				  )
 );
 
-//******************************************************************/
-//***************    Execute Instruction ***************************/
 
 ALU
 Arithmetic_Logic_Unit 
@@ -263,7 +346,7 @@ Arithmetic_Logic_Unit
 	.in_ALUOperation_4(w_ALUOperation_4),
 	.in_A_32(w_ID_R_Out_ReadData1_32),
 	.in_B_32(w_ReadData2OrInmmediate_32),
-	.in_shamt_5(w_ID_R_Out_SignExtend_32[10:6]),
+	.in_shamt_5(w_ID_R_Out_Instruction_26[10:6]),
 
 	.o_Zero(w_Zero),
 	.o_ALUResult_32(w_ALUResult_32)
@@ -273,10 +356,10 @@ ALUControl
 ArithmeticLogicUnitControl
 (
 	.in_ALUOp_3(w_ID_R_Out_ALUop_3),
-	.in_ALUFunction_6(w_ID_R_Out_SignExtend_32[5:0]),
+	.in_ALUFunction_6(w_ID_R_Out_Instruction_26[5:0]),
 
 	.o_ALUOperation_4(w_ALUOperation_4),
-	.o_JumpRegister(w_jumprRegisterControl)
+	.o_JumpRegister(w_jumprRegisterCtrl)
 
 );
 
@@ -295,7 +378,6 @@ MUX_ForRTypeAndIType
 
 );
 
-
 Multiplexer2to1
 #(
 	.NBits(32)
@@ -310,6 +392,7 @@ MUX_ForReadDataAndInmediate
 
 );
 
+
 // ------------ Branching Logic
 Adder32bits
 PC_Plus_Branching_Offset
@@ -322,85 +405,13 @@ PC_Plus_Branching_Offset
 
 );
 
-Multiplexer2to1
-#(
-	.NBits(32)
-)
-MUX_ForBranchingControl
-(
-	.in_Selector(w_branchingControlSignal),
-	.MUX_Data0_dw(w_ID_R_Out_Plus4_32),
-	.MUX_Data1_dw(w_AdderBranching_32),
-	
-	.MUX_Output_dw(w_MuxBranchingOut_32)
 
-);
-
-assign w_branchingControlSignal = w_ID_R_Out_BranchEn & ~(w_ID_R_Out_BranchType ^ w_Zero);
-
-// --------------------------- Jump logic
+//******************************************************************/
+//***************    Execute Instruction ***************************/
 
 
-Multiplexer2to1
-#(
-	.NBits(32)
-)
-MUX_ForJumpControl
-(
-	.in_Selector(w_ID_R_Out_jumpCtrl),
-	.MUX_Data0_dw(w_MuxBranchingOut_32),
-	.MUX_Data1_dw({w_ID_R_Out_Plus4_32[31:28], w_ID_R_Out_JumpAddres_26, 2'b 00}),
-	
-	.MUX_Output_dw(w_MuxJumpingOut_32)
-
-);
-
-// Write the contents of program counter if the jal it's enable
-Multiplexer2to1
-#(
-	.NBits(32)
-)MUX_JumpAndLink
-(
-
-	.in_Selector(w_jumpAndLinkControl),
-	.MUX_Data0_dw(w_writeRegisterFileFromMemOrALu_32),
-	.MUX_Data1_dw(w_ID_R_Out_Plus4_32),
-
-	.MUX_Output_dw(w_writeDataRegisterFile_32)
-);
 
 
-Multiplexer2to1
-#(
-	.NBits(5)
-)MUX_WriteToRegister_RA
-(
-
-	.in_Selector(w_jumpAndLinkControl),
-	.MUX_Data0_dw(w_WriteRegisterAddress_5),
-	.MUX_Data1_dw(5'd 31),
-	
-	.MUX_Output_dw(w_MuxSelectRA_5)
-);
-
-assign w_jumpAndLinkControl =  w_ID_R_Out_RegWrite & w_ID_R_Out_jumpCtrl;
-
-
-// Multiplexer between the jump to content of register or result of other muxes
-
-Multiplexer2to1
-#(
-	.NBits(32)
-)
-MUX_ForJumpToContentOfRegister
-(
-	.in_Selector(w_jumprRegisterControl),
-	.MUX_Data0_dw(w_MuxJumpingOut_32),
-	.MUX_Data1_dw(w_ID_R_Out_ReadData1_32),
-	
-	.MUX_Output_dw(w_jumRegisterToPC_32)
-
-);
 
 
 //******************************************************************/
