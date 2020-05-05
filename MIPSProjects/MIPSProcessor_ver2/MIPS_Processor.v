@@ -340,6 +340,11 @@ ID_EX_Register
 );
 
 
+
+//******************************************************************/
+//***************    Execute Instruction ***************************/
+
+
 ALU
 Arithmetic_Logic_Unit 
 (
@@ -371,8 +376,8 @@ Multiplexer2to1
 MUX_ForRTypeAndIType
 (
 	.in_Selector(w_ID_R_Out_RegDst),
-	.MUX_Data0_dw(w_ID_R_Out_WriteAdd1_5),
-	.MUX_Data1_dw(w_ID_R_Out_WriteAdd2_5),
+	.MUX_Data0_dw(w_ID_R_Out_Instruction_26[20:16]),
+	.MUX_Data1_dw(w_ID_R_Out_Instruction_26[15:11]),
 	
 	.MUX_Output_dw(w_WriteRegisterAddress_5)
 
@@ -404,10 +409,6 @@ PC_Plus_Branching_Offset
 
 
 );
-
-
-//******************************************************************/
-//***************    Execute Instruction ***************************/
 
 
 
