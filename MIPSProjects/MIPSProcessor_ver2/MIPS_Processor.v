@@ -35,7 +35,7 @@ wire [31:0] w_PC_wireToROM_32;
 wire [31:0] w_PC_wirePlus4_32;
 wire [31:0] w_MuxJumpingOut_32;
 wire [31:0] w_Instruction_32;
-
+wire [31:0] w_jumRegisterToPC_32;
 
 wire [31:0] w_IF_R_Out_Instruction_32;
 wire [31:0] w_IF_R_Out_PC_Plus4_32;
@@ -60,6 +60,7 @@ wire [31:0] w_ReadData2_32;
 
 wire w_RegWriteOR;
 wire [31:0] w_InmmediateExtend_32;
+wire [4:0]  w_MuxSelectRA_5;
 
 // Wires going out from ID/EX
 wire w_ID_R_Out_RegWrite;
@@ -127,20 +128,6 @@ wire [ 4:0]	w_MEM_R_Out_WriteRegisterAddress_5;
 //********************     Write Back Wires  ****************/
 
 wire [31:0] w_writeRegisterFileFromMemOrALu_32;
-
-
-
-
-
-wire [4:0]  w_MuxSelectRA_5;
-wire [31:0] w_jumRegisterToPC_32;
-
-// Program Counter wires
-
-
-// Register wires
-
-
 
 
 integer ALUStatus;

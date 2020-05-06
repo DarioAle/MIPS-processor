@@ -45,6 +45,8 @@ fx:    add $s6, $0, 0x100
        add  $0, $0, $0
        add  $0, $0, $0
        jr  $ra
+       add $0, $0, $0
+       add $0, $0, $0
 
 EXIT:
 	
