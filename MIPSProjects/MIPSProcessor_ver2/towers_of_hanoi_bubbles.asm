@@ -81,6 +81,8 @@ ELSE:
 		add $a2, $a3, $zero	# assign to target, auxiliary
 		add $a3, $t7, $zero	# assign to auxiliary, temp
 		
+		add $0, $0, $0
+		add $0, $0, $0
 		jal SolveHanoiRecursive # now we solve for n - 1 and swapped pegs
 		add $0, $0, $0
 		add $0, $0, $0
@@ -107,6 +109,8 @@ ELSE:
 		add $a1, $a3, $zero	# assign to source, auxiliary
 		add $a3, $t7, $zero	# assign to auxiliary, temp
 		
+		add $0, $0, $0
+		add $0, $0, $0
 		jal SolveHanoiRecursive # now we solve for n - 1 and swapped pegs
 		add $0, $0, $0
 		add $0, $0, $0
@@ -123,5 +127,8 @@ ELSE:
 END:		
 		
 		jr $ra
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
 		
 EXIT:

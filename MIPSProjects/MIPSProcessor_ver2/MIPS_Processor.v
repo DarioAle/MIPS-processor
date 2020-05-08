@@ -17,7 +17,7 @@
 
 module MIPS_Processor
 #(
-	parameter MEMORY_DEPTH = 64
+	parameter MEMORY_DEPTH = 85
 )
 
 (
@@ -561,12 +561,12 @@ RAM_External
 );
 
 // Multiplexor to choose to write memory from 
-// futre pipeline or the incoming pipeline
+// future write back operation or the incoming pipeline
 Multiplexer2to1
 #(
 	.NBits(32)
 )
-MUX_
+MUX_ForwardLW
 (
 	.in_Selector(w_forwardingForLWCtrl),
 	.MUX_Data0_dw(w_EX_R_Out_ReadData2_32),
