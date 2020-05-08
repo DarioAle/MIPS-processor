@@ -111,7 +111,13 @@ wire w_EX_R_Out_Zero;
 wire [31:0] w_EX_R_Out_AdderBranching_32;
 wire [31:0] w_EX_R_Out_ReadData2_32;
 wire [31:0] w_EX_R_Out_ALUResult_32;
+wire [ 4:0] w_EX_R_Out_RtRegisterAddress_5;
 wire [ 4:0] w_EX_R_Out_WriteRegisterAddress_5;
+
+
+// Forwarding Muxes wires.
+wire [31:0] w_forwardMuxOutA_32;
+wire [31:0] w_forwardMuxOutB_32;
 
 
 //********************     Memory Access Wires  ****************/
@@ -123,12 +129,17 @@ wire w_MEM_R_Out_RegWrite;
 wire w_MEM_R_Out_memToReg;
 wire [31:0]	w_MEM_R_Out_MemoryData_32;
 wire [31:0]	w_MEM_R_Out_ALUResult_32;
+wire [31:0] w_MuxOut_WBorMEM_32;
 wire [ 4:0]	w_MEM_R_Out_WriteRegisterAddress_5;
 
 //********************     Write Back Wires  ****************/
 
 wire [31:0] w_writeRegisterFileFromMemOrALu_32;
 
+// ****************** Forwarding Unit Wires ******************/
+wire [1:0] w_forwardingACtrlA_2;
+wire [1:0] w_forwardingACtrlB_2;
+wire w_forwardingForLWCtrl;
 
 integer ALUStatus;
 
@@ -189,7 +200,7 @@ MUX_ForJumpToContentOfRegister
 (
 	.in_Selector(w_jumprRegisterCtrl),
 	.MUX_Data0_dw(w_MuxJumpingOut_32),
-	.MUX_Data1_dw(w_ID_R_Out_ReadData1_32),
+	.MUX_Data1_dw(w_forwardMuxOutA_32),
 	
 	.MUX_Output_dw(w_jumRegisterToPC_32)
 
@@ -394,7 +405,7 @@ ALU
 Arithmetic_Logic_Unit 
 (
 	.in_ALUOperation_4(w_ALUOperation_4),
-	.in_A_32(w_ID_R_Out_ReadData1_32),
+	.in_A_32(w_forwardMuxOutA_32),
 	.in_B_32(w_ReadData2OrInmmediate_32),
 	.in_shamt_5(w_ID_R_Out_Instruction_26[10:6]),
 
@@ -434,7 +445,7 @@ Multiplexer2to1
 MUX_ForReadDataAndInmediate
 (
 	.in_Selector(w_ID_R_Out_AlUsrc),
-	.MUX_Data0_dw(w_ID_R_Out_ReadData2_32),
+	.MUX_Data0_dw(w_forwardMuxOutB_32),
 	.MUX_Data1_dw(w_ID_R_Out_SignExtend_32),
 	
 	.MUX_Output_dw(w_ReadData2OrInmmediate_32)
@@ -450,10 +461,40 @@ PC_Plus_Branching_Offset
 	.out_Result(w_AdderBranching_32)
 );
 
+// 	Forwarding A -------------------------------
+Multiplexer3to1
+#(
+	.NBits(32)
+)
+ForwardToALU_A 
+(
+	.in_Selector_2(w_forwardingACtrlA_2),
+	.MUX_Data00_dw(w_ID_R_Out_ReadData1_32),
+	.MUX_Data01_dw(w_writeRegisterFileFromMemOrALu_32),
+	.MUX_Data10_dw(w_EX_R_Out_ALUResult_32),
 
+	.MUX_Output_dw(w_forwardMuxOutA_32)
+);
+
+// Forwarding B
+Multiplexer3to1
+#(
+	.NBits(32)
+)
+ForwardToALU_B 
+(
+	.in_Selector_2(w_forwardingACtrlB_2),
+	.MUX_Data00_dw(w_ID_R_Out_ReadData2_32),
+	.MUX_Data01_dw(w_writeRegisterFileFromMemOrALu_32),
+	.MUX_Data10_dw(w_EX_R_Out_ALUResult_32),
+
+	.MUX_Output_dw(w_forwardMuxOutB_32)
+);
+
+// Register 
 RegisterPipeline
 #(
-	.N(108)
+	.N(113)
 )
 EX_MEM_Register
 (
@@ -473,9 +514,10 @@ EX_MEM_Register
 
 			w_Zero,
 			w_AdderBranching_32,
-			w_ID_R_Out_ReadData2_32,
+			w_forwardMuxOutB_32,
 			w_ALUResult_32,
-			w_WriteRegisterAddress_5
+			w_WriteRegisterAddress_5,
+			w_ID_R_Out_Instruction_26[20:16] // RS address
 
 		}),
 
@@ -493,7 +535,9 @@ EX_MEM_Register
 			w_EX_R_Out_AdderBranching_32,
 			w_EX_R_Out_ReadData2_32,
 			w_EX_R_Out_ALUResult_32,
-			w_EX_R_Out_WriteRegisterAddress_5
+			w_EX_R_Out_WriteRegisterAddress_5,
+			w_EX_R_Out_RtRegisterAddress_5
+
 		})
 );
 
@@ -507,7 +551,7 @@ DataMemory
 )
 RAM_External
 (
-	 .in_WriteData_dw(w_EX_R_Out_ReadData2_32),
+	 .in_WriteData_dw(w_MuxOut_WBorMEM_32),
 	 .in_Address_dw({24'b 0,w_EX_R_Out_ALUResult_32[7:0]}),
 	 .in_MemWrite(w_EX_R_Out_memWrite),
 	 .in_MemRead(w_EX_R_Out_memRead),
@@ -516,6 +560,21 @@ RAM_External
 	 .o_ReadData_dw(w_FromExternalMemToMux_32)
 );
 
+// Multiplexor to choose to write memory from 
+// futre pipeline or the incoming pipeline
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_
+(
+	.in_Selector(w_forwardingForLWCtrl),
+	.MUX_Data0_dw(w_EX_R_Out_ReadData2_32),
+	.MUX_Data1_dw(w_writeRegisterFileFromMemOrALu_32),
+	
+	.MUX_Output_dw(w_MuxOut_WBorMEM_32)
+
+);
 
 RegisterPipeline
 #(
@@ -562,6 +621,29 @@ writeRegisterSource
 	
 	.MUX_Output_dw(w_writeRegisterFileFromMemOrALu_32)
 
+);
+
+//******************************************************************/
+//********************    Forwarding Unit        ************************/
+ForwardingUnit
+ForwardUnit
+(
+	.in_EX_MEM_RegWrite(w_EX_R_Out_RegWrite),
+	.in_EX_MEM_Rd_address_5(w_EX_R_Out_WriteRegisterAddress_5),
+
+	.in_MEM_WB_RegWrite(w_MEM_R_Out_RegWrite),
+	.in_MEM_WB_Rd_address_5(w_MEM_R_Out_WriteRegisterAddress_5),
+
+	.in_ID_EX_Rs_address_5(w_ID_R_Out_Instruction_26[25:21]),
+	.in_ID_EX_Rt_address_5(w_ID_R_Out_Instruction_26[20:16]),
+	
+	.in_EX_MEM_Rt_address_5(w_EX_R_Out_RtRegisterAddress_5),
+
+
+
+	.o_forward_lw(w_forwardingForLWCtrl),
+	.o_forwardA_2(w_forwardingACtrlA_2),
+	.o_forwardB_2(w_forwardingACtrlB_2)
 );
 
 
