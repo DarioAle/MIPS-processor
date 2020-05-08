@@ -34,7 +34,7 @@ module DataMemory
 
 	initial
 	begin
-		$readmemh("C:\\Arqui\\MIPSProjects\\MIPSProcessor_ver2\\text.dat", ram);
+		$readmemh("C:\\Arqui\\MIPSProjects\\MIPSProcessor_ver2\\mem.dat", ram);
 	end
 
 
