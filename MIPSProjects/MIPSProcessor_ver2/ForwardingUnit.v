@@ -17,7 +17,7 @@ module ForwardingUnit
 	input  in_EX_MEM_RegWrite,
 	input  [4:0] in_MEM_WB_Rd_address_5,
 	input  [4:0] in_EX_MEM_Rd_address_5,
-
+	input  in_EX_MEM_memWrite,
 
 	input  [4:0] in_ID_EX_Rt_address_5,
 	input  [4:0] in_ID_EX_Rs_address_5,
@@ -60,7 +60,7 @@ assign w_memHazardRt = w_MemRdNotZeroAndRegWrite & (in_ID_EX_Rt_address_5 == in_
 
 assign o_forwardA_2 =  (w_exHazardRs) ? 2'b 10 : (w_memHazardRs) ? 2'b 01 : 2'b 00;
 assign o_forwardB_2 =  (w_exHazardRt) ? 2'b 10 : (w_memHazardRt) ? 2'b 01 : 2'b 00;
-assign o_forward_lw =  (in_EX_MEM_Rt_address_5 == in_MEM_WB_Rd_address_5) ? (w_MemRdNotZeroAndRegWrite) : 1'b 0;
+assign o_forward_lw =  (in_EX_MEM_Rt_address_5 == in_MEM_WB_Rd_address_5) ? (w_MemRdNotZeroAndRegWrite & in_EX_MEM_memWrite) : 1'b 0;
 
 
 

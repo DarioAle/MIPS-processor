@@ -639,7 +639,7 @@ ForwardUnit
 	
 	.in_EX_MEM_Rt_address_5(w_EX_R_Out_RtRegisterAddress_5),
 
-
+	.in_EX_MEM_memWrite(w_EX_R_Out_memWrite),
 
 	.o_forward_lw(w_forwardingForLWCtrl),
 	.o_forwardA_2(w_forwardingACtrlA_2),
