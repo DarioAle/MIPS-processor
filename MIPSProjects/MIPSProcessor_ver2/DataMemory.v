@@ -31,6 +31,13 @@ module DataMemory
 	reg [DATA_WIDTH-1:0] ram [MEMORY_DEPTH-1:0];
 	wire [DATA_WIDTH-1:0] w_ReadDataAux_dw;
 
+
+	initial
+	begin
+		$readmemh("C:\\Arqui\\MIPSProjects\\MIPSProcessor_ver2\\mem.dat", ram);
+	end
+
+
 	always @ (posedge clk)
 	begin
 		// Write

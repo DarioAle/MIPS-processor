@@ -38,16 +38,28 @@ FOR:		addi $a1, $a1, 4	# increment top
 		sw $t0, ($a1)		# store counter value in the top of the stack
 		addi $t0, $t0, -1	# Decrement counter
 		bne  $t0, $zero, FOR	# If counter is not zero iterate
-		
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0		
 		
 		add $a0, $a0, $s0	# Set argument to number of disks
 		jal SolveHanoiRecursive	# Start recursive solution
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
 		j EXIT
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
 
 		
 SolveHanoiRecursive:
 		
 		bne $a0, $t9, ELSE	# BASE CASE if n == 1
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
+		
 		# Read from source
 		lw $t5,  ($a1)		# Save value pointed by top
 		sw $zero, ($a1)		# Write a zero in the position pointed by top in source
@@ -56,6 +68,9 @@ SolveHanoiRecursive:
 		addi $a2, $a2, 4	# Increment the top pointer
 		sw $t5, ($a2) 		# Write value of new top in target
 		jr $ra
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
 ELSE:		
 		addi $sp, $sp, -4	# Save space for $ra
 		sw $ra ($sp)		# Bottom of the stack return address
@@ -66,7 +81,12 @@ ELSE:
 		add $a2, $a3, $zero	# assign to target, auxiliary
 		add $a3, $t7, $zero	# assign to auxiliary, temp
 		
+		add $0, $0, $0
+		add $0, $0, $0
 		jal SolveHanoiRecursive # now we solve for n - 1 and swapped pegs
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
 		
 		# swap auxiliary and target to go back to the refernces originally made to this call
 		add $t7, $a2, $zero	# Save in temp target
@@ -89,7 +109,12 @@ ELSE:
 		add $a1, $a3, $zero	# assign to source, auxiliary
 		add $a3, $t7, $zero	# assign to auxiliary, temp
 		
+		add $0, $0, $0
+		add $0, $0, $0
 		jal SolveHanoiRecursive # now we solve for n - 1 and swapped pegs
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
 		
 		# swap auxiliary and source to go back to the refernces originally made to this call
 		add $t7, $a1, $zero	# Save in temp source		
@@ -102,5 +127,8 @@ ELSE:
 END:		
 		
 		jr $ra
+		add $0, $0, $0
+		add $0, $0, $0
+		add $0, $0, $0
 		
 EXIT:

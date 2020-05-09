@@ -26,11 +26,14 @@ localparam Select_00    = 2'b 00;
 localparam Select_01    = 2'b 01;
 localparam Select_10    = 2'b 10;
 
-	always@(in_Selector_2,MUX_Data00_dw,MUX_Data01_dw, MUX_Data10_dw) begin
+
+	always@(*) begin
 		case(in_Selector_2)
 			Select_00: MUX_Output_dw = MUX_Data00_dw;
 			Select_01: MUX_Output_dw = MUX_Data01_dw;
 			Select_10: MUX_Output_dw = MUX_Data10_dw;
+			default:
+				MUX_Output_dw = MUX_Data00_dw;
 		endcase
 	end
 

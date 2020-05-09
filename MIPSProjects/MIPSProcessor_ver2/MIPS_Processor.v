@@ -7,10 +7,17 @@
 * This processor was made for computer organization class at ITESO.
 ******************************************************************/
 
+// Note about conventio
+/*
+	* The wire is declared in the same stage as the component is going out from.
+	*
+	*
+
+*/
 
 module MIPS_Processor
 #(
-	parameter MEMORY_DEPTH = 64
+	parameter MEMORY_DEPTH = 85
 )
 
 (
@@ -21,15 +28,41 @@ module MIPS_Processor
 	// Output
 	output [31:0] ALUResultOut
 );
-//******************************************************************/
+
 //********************     Instruction Fetch Wires  ****************/
+wire [31:0] w_MuxBranchingOut_32;
+wire [31:0] w_PC_wireToROM_32;
+wire [31:0] w_PC_wirePlus4_32;
+wire [31:0] w_MuxJumpingOut_32;
+wire [31:0] w_Instruction_32;
+wire [31:0] w_jumRegisterToPC_32;
+
 wire [31:0] w_IF_R_Out_Instruction_32;
 wire [31:0] w_IF_R_Out_PC_Plus4_32;
 
-//******************************************************************/
 //********************     Instruction Decode Wires  ****************/
+wire w_BranchType;
+wire w_BranchEn;
 
+wire w_jumpControlSignal;
 
+wire w_memToRegister;
+wire w_memRead;
+wire w_memWrite;
+wire w_RegWrite;
+wire w_RegDst;
+wire [2:0]  w_ALUOp_3;
+wire w_ALUSrc;
+
+wire [31:0] w_writeDataRegisterFile_32;
+wire [31:0] w_ReadData1_32;
+wire [31:0] w_ReadData2_32;
+
+wire w_RegWriteOR;
+wire [31:0] w_InmmediateExtend_32;
+wire [4:0]  w_MuxSelectRA_5;
+
+// Wires going out from ID/EX
 wire w_ID_R_Out_RegWrite;
 wire w_ID_R_Out_memToReg;
 wire w_ID_R_Out_memWrite;
@@ -46,70 +79,142 @@ wire [31:0] w_ID_R_Out_Plus4_32;
 wire [31:0] w_ID_R_Out_ReadData1_32;
 wire [31:0] w_ID_R_Out_ReadData2_32;
 wire [31:0] w_ID_R_Out_SignExtend_32; 
-wire [25:0] w_ID_R_Out_JumpAddres_26;
+wire [25:0] w_ID_R_Out_Instruction_26;
 wire [4:0]  w_ID_R_Out_WriteAdd1_5;
 wire [4:0]  w_ID_R_Out_WriteAdd2_5;
 
-
-
-//******************************************************************/
-//********************     Instruction Execution Wires  ****************/
-
-
-//******************************************************************/
-//********************     Memory Access Wires  ****************/
-
-//******************************************************************/
-//********************     Write Back Wires  ****************/
-
-// Branching wires
-wire w_BranchType;
-wire w_BranchEn;
+// ********************     Instruction Execution Wires  ****************/
 wire w_branchingControlSignal;
-wire [31:0] w_MuxBranchingOut_32;
+wire w_jumprRegisterCtrl;
+
+
 wire [31:0] w_AdderBranching_32;
 
-// Jumping wires
-wire w_jumpControlSignal;
-wire w_jumpAndLinkControl;
-wire w_jumprRegisterControl;
-wire [31:0] w_MuxJumpingOut_32;
-wire [4:0]  w_MuxSelectRA_5;
-wire [31:0] w_jumRegisterToPC_32;
-
-// Program Counter wires
-wire [31:0] w_PC_wireToROM_32;
-wire [31:0] w_PC_wirePlus4_32;
-
-// Register wires
-wire w_RegWrite;
-wire w_RegDst;
-wire [31:0] w_writeDataRegisterFile_32;
-wire [4:0] 	w_WriteRegisterAddress_5;
-wire [31:0] w_ReadData1_32;
-wire [31:0] w_ReadData2_32;
-wire [31:0] w_Instruction_32;
-
-// ALU Wires
-wire w_ALUSrc;
 wire w_Zero;
-wire [2:0]  w_ALUOp_3;
+wire w_jumpAndLinkCtrl;
+
 wire [3:0]  w_ALUOperation_4;
 wire [31:0] w_ALUResult_32;
-wire [31:0] w_InmmediateExtend_32;
-wire [31:0] w_ReadData2OrInmmediate_32;
 
-// Memory wires
-wire w_memToRegister;
-wire w_memRead;
-wire w_memWrite;
+wire [31:0] w_ReadData2OrInmmediate_32;
+wire [4:0] 	w_WriteRegisterAddress_5;
+
+wire w_EX_R_Out_RegWrite;
+wire w_EX_R_Out_memToReg;
+
+wire w_EX_R_Out_memWrite;
+wire w_EX_R_Out_memRead;
+wire w_EX_R_Out_BranchType;
+wire w_EX_R_Out_BranchEnable;
+
+wire w_EX_R_Out_Zero;
+wire [31:0] w_EX_R_Out_AdderBranching_32;
+wire [31:0] w_EX_R_Out_ReadData2_32;
+wire [31:0] w_EX_R_Out_ALUResult_32;
+wire [ 4:0] w_EX_R_Out_RtRegisterAddress_5;
+wire [ 4:0] w_EX_R_Out_WriteRegisterAddress_5;
+
+
+// Forwarding Muxes wires.
+wire [31:0] w_forwardMuxOutA_32;
+wire [31:0] w_forwardMuxOutB_32;
+
+
+//********************     Memory Access Wires  ****************/
+
 wire [31:0] w_FromExternalMemToMux_32;
+
+// wires going out from MEM/WB
+wire w_MEM_R_Out_RegWrite;
+wire w_MEM_R_Out_memToReg;
+wire [31:0]	w_MEM_R_Out_MemoryData_32;
+wire [31:0]	w_MEM_R_Out_ALUResult_32;
+wire [31:0] w_MuxOut_WBorMEM_32;
+wire [ 4:0]	w_MEM_R_Out_WriteRegisterAddress_5;
+
+//********************     Write Back Wires  ****************/
+
 wire [31:0] w_writeRegisterFileFromMemOrALu_32;
+
+// ****************** Forwarding Unit Wires ******************/
+wire [1:0] w_forwardingACtrlA_2;
+wire [1:0] w_forwardingACtrlB_2;
+wire w_forwardingForLWCtrl;
 
 integer ALUStatus;
 
+
+// ********************** MIPS Processor ************************************/
+/*                                                                           /
+*                                                                            /
+*	Here begins the structural description of the pipelined MIPS processor   /
+*																			 /
+*																			 /
+*****************************************************************************/
+
+
 //******************************************************************/
 //************     Instruction Fetch Stage        ******************/
+
+Multiplexer2to1
+#(  
+	.NBits(32)
+)
+MUX_ForBranchingControl
+(
+	.in_Selector(w_branchingControlSignal),
+	.MUX_Data0_dw(w_PC_wirePlus4_32),
+	.MUX_Data1_dw(w_EX_R_Out_AdderBranching_32),
+	
+	.MUX_Output_dw(w_MuxBranchingOut_32)
+
+);
+
+assign w_branchingControlSignal = w_EX_R_Out_BranchEnable & ~(w_EX_R_Out_BranchType ^ w_EX_R_Out_Zero);
+
+// --------------------------- Jump logic
+
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForJumpControl
+(
+	.in_Selector(w_ID_R_Out_jumpCtrl),
+	.MUX_Data0_dw(w_MuxBranchingOut_32),
+	.MUX_Data1_dw({w_ID_R_Out_Plus4_32[31:28], w_ID_R_Out_Instruction_26, 2'b 00}),
+	
+	.MUX_Output_dw(w_MuxJumpingOut_32)
+
+);
+
+
+// Multiplexer between the jump to content of register or result of other muxes
+
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForJumpToContentOfRegister
+(
+	.in_Selector(w_jumprRegisterCtrl),
+	.MUX_Data0_dw(w_MuxJumpingOut_32),
+	.MUX_Data1_dw(w_forwardMuxOutA_32),
+	
+	.MUX_Output_dw(w_jumRegisterToPC_32)
+
+);
+
+PC_Register
+ProgramCounter(
+	.clk(clk),
+	.reset(reset),
+	.in_NewPC_dw(w_jumRegisterToPC_32),
+
+	.o_PCValue_dw(w_PC_wireToROM_32)
+);
+
 
 ProgramMemory
 #(
@@ -121,14 +226,6 @@ ROMProgramMemory
 	.Instruction(w_Instruction_32)
 );
 
-PC_Register
-ProgramCounter(
-	.clk(clk),
-	.reset(reset),
-	.in_NewPC_dw(w_jumRegisterToPC_32),
-
-	.o_PCValue_dw(w_PC_wireToROM_32)
-);
 
 
 Adder32bits
@@ -150,9 +247,17 @@ IF_ID_Register
 	.clk(clk),
 	.reset(reset),
 	.enable(1'b 1),
-	.DataInput_dw({w_Instruction_32, w_PC_wirePlus4_32}),
+	.DataInput_dw(
+		{
+			w_Instruction_32, 
+			w_PC_wirePlus4_32
+		}),
 
-	.DataOutput_dw({w_IF_R_Out_Instruction_32,w_IF_R_Out_PC_Plus4_32})
+	.DataOutput_dw(
+		{
+			w_IF_R_Out_Instruction_32,
+			w_IF_R_Out_PC_Plus4_32
+		})
 );
 
 
@@ -175,185 +280,6 @@ ControlUnit
 	.o_MemWrite(w_memWrite)
 );
 
-RegisterFile
-Register_File
-(
-	.clk(clk),
-	.reset(reset),
-	.RegWrite(w_ID_R_Out_RegWrite),
-	.in_WriteRegister_5(w_MuxSelectRA_5),
-	.in_ReadRegister1_5(w_IF_R_Out_Instruction_32[25:21]),
-	.in_ReadRegister2_5(w_IF_R_Out_Instruction_32[20:16]),
-	.in_WriteData_32(w_writeDataRegisterFile_32),
-
-	.o_ReadData1_32(w_ReadData1_32),
-	.o_ReadData2_32(w_ReadData2_32)
-
-);
-
-SignExtend
-SignExtendForConstants
-(   
-	.DataInput(w_IF_R_Out_Instruction_32[15:0]),
-	.i_aluOP_3(w_ALUOp_3),
-
-   .SignExtendOutput(w_InmmediateExtend_32)
-);
-
-RegisterPipeline
-#(
-	.N(176)
-)
-ID_EX_Register
-(
-
-	.clk(clk),
-	.reset(reset),
-	.enable(1'b 1),
-	.DataInput_dw(
-					{
-						w_RegWrite,
-						w_memToRegister,
-						w_memRead,
-						w_memWrite,
-						w_BranchType,
-						w_BranchEn,
-						w_jumpControlSignal,
-						w_ALUOp_3,
-						w_ALUSrc,
-						w_RegDst,
-						w_IF_R_Out_PC_Plus4_32,
-						w_ReadData1_32,
-						w_ReadData2_32,
-						w_InmmediateExtend_32,
-						w_IF_R_Out_Instruction_32[20:16],
-						w_IF_R_Out_Instruction_32[15:11],
-						w_IF_R_Out_Instruction_32[25:0]
-					}
-		),
-
-	.DataOutput_dw(
-					{ w_ID_R_Out_RegWrite,
-					  w_ID_R_Out_memToReg,
-					  w_ID_R_Out_memRead,
-					  w_ID_R_Out_memWrite,
-					  w_ID_R_Out_BranchType,
-					  w_ID_R_Out_BranchEn,
-					  w_ID_R_Out_jumpCtrl,
-					  w_ID_R_Out_ALUop_3,
-					  w_ID_R_Out_AlUsrc,
-					  w_ID_R_Out_RegDst,
-					  w_ID_R_Out_Plus4_32,
-					  w_ID_R_Out_ReadData1_32,
-					  w_ID_R_Out_ReadData2_32,
-					  w_ID_R_Out_SignExtend_32,
-					  w_ID_R_Out_WriteAdd1_5,
-					  w_ID_R_Out_WriteAdd2_5,
-					  w_ID_R_Out_JumpAddres_26
-					}
-				  )
-);
-
-//******************************************************************/
-//***************    Execute Instruction ***************************/
-
-ALU
-Arithmetic_Logic_Unit 
-(
-	.in_ALUOperation_4(w_ALUOperation_4),
-	.in_A_32(w_ID_R_Out_ReadData1_32),
-	.in_B_32(w_ReadData2OrInmmediate_32),
-	.in_shamt_5(w_ID_R_Out_SignExtend_32[10:6]),
-
-	.o_Zero(w_Zero),
-	.o_ALUResult_32(w_ALUResult_32)
-);
-
-ALUControl
-ArithmeticLogicUnitControl
-(
-	.in_ALUOp_3(w_ID_R_Out_ALUop_3),
-	.in_ALUFunction_6(w_ID_R_Out_SignExtend_32[5:0]),
-
-	.o_ALUOperation_4(w_ALUOperation_4),
-	.o_JumpRegister(w_jumprRegisterControl)
-
-);
-
-
-Multiplexer2to1
-#(
-	.NBits(5)
-)
-MUX_ForRTypeAndIType
-(
-	.in_Selector(w_ID_R_Out_RegDst),
-	.MUX_Data0_dw(w_ID_R_Out_WriteAdd1_5),
-	.MUX_Data1_dw(w_ID_R_Out_WriteAdd2_5),
-	
-	.MUX_Output_dw(w_WriteRegisterAddress_5)
-
-);
-
-
-Multiplexer2to1
-#(
-	.NBits(32)
-)
-MUX_ForReadDataAndInmediate
-(
-	.in_Selector(w_ID_R_Out_AlUsrc),
-	.MUX_Data0_dw(w_ID_R_Out_ReadData2_32),
-	.MUX_Data1_dw(w_ID_R_Out_SignExtend_32),
-	
-	.MUX_Output_dw(w_ReadData2OrInmmediate_32)
-
-);
-
-// ------------ Branching Logic
-Adder32bits
-PC_Plus_Branching_Offset
-(
-	.in_Data0(w_ID_R_Out_Plus4_32),
-	.in_Data1({w_ID_R_Out_SignExtend_32[29:0], 2'b 00}),
-	
-	.out_Result(w_AdderBranching_32)
-
-
-);
-
-Multiplexer2to1
-#(
-	.NBits(32)
-)
-MUX_ForBranchingControl
-(
-	.in_Selector(w_branchingControlSignal),
-	.MUX_Data0_dw(w_ID_R_Out_Plus4_32),
-	.MUX_Data1_dw(w_AdderBranching_32),
-	
-	.MUX_Output_dw(w_MuxBranchingOut_32)
-
-);
-
-assign w_branchingControlSignal = w_ID_R_Out_BranchEn & ~(w_ID_R_Out_BranchType ^ w_Zero);
-
-// --------------------------- Jump logic
-
-
-Multiplexer2to1
-#(
-	.NBits(32)
-)
-MUX_ForJumpControl
-(
-	.in_Selector(w_ID_R_Out_jumpCtrl),
-	.MUX_Data0_dw(w_MuxBranchingOut_32),
-	.MUX_Data1_dw({w_ID_R_Out_Plus4_32[31:28], w_ID_R_Out_JumpAddres_26, 2'b 00}),
-	
-	.MUX_Output_dw(w_MuxJumpingOut_32)
-
-);
 
 // Write the contents of program counter if the jal it's enable
 Multiplexer2to1
@@ -362,7 +288,7 @@ Multiplexer2to1
 )MUX_JumpAndLink
 (
 
-	.in_Selector(w_jumpAndLinkControl),
+	.in_Selector(w_jumpAndLinkCtrl),
 	.MUX_Data0_dw(w_writeRegisterFileFromMemOrALu_32),
 	.MUX_Data1_dw(w_ID_R_Out_Plus4_32),
 
@@ -376,34 +302,246 @@ Multiplexer2to1
 )MUX_WriteToRegister_RA
 (
 
-	.in_Selector(w_jumpAndLinkControl),
-	.MUX_Data0_dw(w_WriteRegisterAddress_5),
+	.in_Selector(w_jumpAndLinkCtrl),
+	.MUX_Data0_dw(w_MEM_R_Out_WriteRegisterAddress_5),
 	.MUX_Data1_dw(5'd 31),
 	
 	.MUX_Output_dw(w_MuxSelectRA_5)
 );
 
-assign w_jumpAndLinkControl =  w_ID_R_Out_RegWrite & w_ID_R_Out_jumpCtrl;
+assign w_jumpAndLinkCtrl =  w_ID_R_Out_RegWrite & w_ID_R_Out_jumpCtrl;
 
 
-// Multiplexer between the jump to content of register or result of other muxes
+RegisterFile
+Register_File
+(
+	.clk(clk),
+	.reset(reset),
+	.RegWrite(w_RegWriteOR),
+	.in_WriteRegister_5(w_MuxSelectRA_5),
+	.in_ReadRegister1_5(w_IF_R_Out_Instruction_32[25:21]),
+	.in_ReadRegister2_5(w_IF_R_Out_Instruction_32[20:16]),
+	.in_WriteData_32(w_writeDataRegisterFile_32),
+
+	.o_ReadData1_32(w_ReadData1_32),
+	.o_ReadData2_32(w_ReadData2_32)
+
+);
+
+assign w_RegWriteOR = w_jumpAndLinkCtrl | w_MEM_R_Out_RegWrite;
+
+SignExtend
+SignExtendForConstants
+(   
+	.DataInput(w_IF_R_Out_Instruction_32[15:0]),
+	.i_aluOP_3(w_ALUOp_3),
+
+   .SignExtendOutput(w_InmmediateExtend_32)
+);
+
+RegisterPipeline
+#(
+	.N(166)
+)
+ID_EX_Register
+(
+
+	.clk(clk),
+	.reset(reset),
+	.enable(1'b 1),
+	.DataInput_dw(
+					{
+						w_RegWrite,
+						w_memToRegister,
+
+						w_memRead,
+						w_memWrite,
+						w_BranchType,
+						w_BranchEn,
+
+						w_jumpControlSignal,
+						w_ALUOp_3,
+						w_ALUSrc,
+						w_RegDst,
+
+						w_IF_R_Out_PC_Plus4_32,
+						w_ReadData1_32,
+						w_ReadData2_32,
+						w_InmmediateExtend_32,
+						w_IF_R_Out_Instruction_32[25:0]
+					}
+		),
+
+	.DataOutput_dw(
+					{ w_ID_R_Out_RegWrite,
+					  w_ID_R_Out_memToReg,
+					 
+					  w_ID_R_Out_memRead,
+					  w_ID_R_Out_memWrite,
+					  w_ID_R_Out_BranchType,
+					  w_ID_R_Out_BranchEn,
+					  
+					  w_ID_R_Out_jumpCtrl,
+					  w_ID_R_Out_ALUop_3,
+					  w_ID_R_Out_AlUsrc,
+					  w_ID_R_Out_RegDst,
+
+					  w_ID_R_Out_Plus4_32,
+					  w_ID_R_Out_ReadData1_32,
+					  w_ID_R_Out_ReadData2_32,
+					  w_ID_R_Out_SignExtend_32,
+					  w_ID_R_Out_Instruction_26
+					}
+				  )
+);
+
+
+
+//******************************************************************/
+//***************    Execute Instruction ***************************/
+
+
+ALU
+Arithmetic_Logic_Unit 
+(
+	.in_ALUOperation_4(w_ALUOperation_4),
+	.in_A_32(w_forwardMuxOutA_32),
+	.in_B_32(w_ReadData2OrInmmediate_32),
+	.in_shamt_5(w_ID_R_Out_Instruction_26[10:6]),
+
+	.o_Zero(w_Zero),
+	.o_ALUResult_32(w_ALUResult_32)
+);
+
+ALUControl
+ArithmeticLogicUnitControl
+(
+	.in_ALUOp_3(w_ID_R_Out_ALUop_3),
+	.in_ALUFunction_6(w_ID_R_Out_Instruction_26[5:0]),
+
+	.o_ALUOperation_4(w_ALUOperation_4),
+	.o_JumpRegister(w_jumprRegisterCtrl)
+
+);
+
+Multiplexer2to1
+#(
+	.NBits(5)
+)
+MUX_ForRTypeAndIType
+(
+	.in_Selector(w_ID_R_Out_RegDst),
+	.MUX_Data0_dw(w_ID_R_Out_Instruction_26[20:16]),
+	.MUX_Data1_dw(w_ID_R_Out_Instruction_26[15:11]),
+	
+	.MUX_Output_dw(w_WriteRegisterAddress_5)
+
+);
 
 Multiplexer2to1
 #(
 	.NBits(32)
 )
-MUX_ForJumpToContentOfRegister
+MUX_ForReadDataAndInmediate
 (
-	.in_Selector(w_jumprRegisterControl),
-	.MUX_Data0_dw(w_MuxJumpingOut_32),
-	.MUX_Data1_dw(w_ID_R_Out_ReadData1_32),
+	.in_Selector(w_ID_R_Out_AlUsrc),
+	.MUX_Data0_dw(w_forwardMuxOutB_32),
+	.MUX_Data1_dw(w_ID_R_Out_SignExtend_32),
 	
-	.MUX_Output_dw(w_jumRegisterToPC_32)
+	.MUX_Output_dw(w_ReadData2OrInmmediate_32)
 
 );
 
+Adder32bits
+PC_Plus_Branching_Offset
+(
+	.in_Data0(w_ID_R_Out_Plus4_32),
+	.in_Data1({w_ID_R_Out_SignExtend_32[29:0], 2'b 00}),
+	
+	.out_Result(w_AdderBranching_32)
+);
 
-//******************************************************************/
+// 	Forwarding A -------------------------------
+Multiplexer3to1
+#(
+	.NBits(32)
+)
+ForwardToALU_A 
+(
+	.in_Selector_2(w_forwardingACtrlA_2),
+	.MUX_Data00_dw(w_ID_R_Out_ReadData1_32),
+	.MUX_Data01_dw(w_writeRegisterFileFromMemOrALu_32),
+	.MUX_Data10_dw(w_EX_R_Out_ALUResult_32),
+
+	.MUX_Output_dw(w_forwardMuxOutA_32)
+);
+
+// Forwarding B
+Multiplexer3to1
+#(
+	.NBits(32)
+)
+ForwardToALU_B 
+(
+	.in_Selector_2(w_forwardingACtrlB_2),
+	.MUX_Data00_dw(w_ID_R_Out_ReadData2_32),
+	.MUX_Data01_dw(w_writeRegisterFileFromMemOrALu_32),
+	.MUX_Data10_dw(w_EX_R_Out_ALUResult_32),
+
+	.MUX_Output_dw(w_forwardMuxOutB_32)
+);
+
+// Register 
+RegisterPipeline
+#(
+	.N(113)
+)
+EX_MEM_Register
+(
+
+	.clk(clk),
+	.reset(reset),
+	.enable(1'b 1),
+	.DataInput_dw(
+		{
+			w_ID_R_Out_RegWrite,
+			w_ID_R_Out_memToReg,		 
+
+		 	w_ID_R_Out_memRead,
+		 	w_ID_R_Out_memWrite,
+		 	w_ID_R_Out_BranchType,
+		 	w_ID_R_Out_BranchEn,
+
+			w_Zero,
+			w_AdderBranching_32,
+			w_forwardMuxOutB_32,
+			w_ALUResult_32,
+			w_WriteRegisterAddress_5,
+			w_ID_R_Out_Instruction_26[20:16] // RS address
+
+		}),
+
+	.DataOutput_dw(
+		{
+			w_EX_R_Out_RegWrite,
+			w_EX_R_Out_memToReg,
+
+			w_EX_R_Out_memRead,
+			w_EX_R_Out_memWrite,
+			w_EX_R_Out_BranchType,
+			w_EX_R_Out_BranchEnable,
+
+			w_EX_R_Out_Zero,
+			w_EX_R_Out_AdderBranching_32,
+			w_EX_R_Out_ReadData2_32,
+			w_EX_R_Out_ALUResult_32,
+			w_EX_R_Out_WriteRegisterAddress_5,
+			w_EX_R_Out_RtRegisterAddress_5
+
+		})
+);
+
+//*******************************************************************/
 // ************************ External memory *********************** //
 
 DataMemory 
@@ -413,14 +551,62 @@ DataMemory
 )
 RAM_External
 (
-	 .in_WriteData_dw(w_ReadData2_32),
-	 .in_Address_dw({24'b 0,w_ALUResult_32[7:0]}),
-	 .in_MemWrite(w_ID_R_Out_memWrite),
-	 .in_MemRead(w_ID_R_Out_memRead),
+	 .in_WriteData_dw(w_MuxOut_WBorMEM_32),
+	 .in_Address_dw({24'b 0,w_EX_R_Out_ALUResult_32[7:0]}),
+	 .in_MemWrite(w_EX_R_Out_memWrite),
+	 .in_MemRead(w_EX_R_Out_memRead),
 	 .clk(clk),
 
 	 .o_ReadData_dw(w_FromExternalMemToMux_32)
 );
+
+// Multiplexor to choose to write memory from 
+// future write back operation or the incoming pipeline
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_ForwardLW
+(
+	.in_Selector(w_forwardingForLWCtrl),
+	.MUX_Data0_dw(w_EX_R_Out_ReadData2_32),
+	.MUX_Data1_dw(w_writeRegisterFileFromMemOrALu_32),
+	
+	.MUX_Output_dw(w_MuxOut_WBorMEM_32)
+
+);
+
+RegisterPipeline
+#(
+	.N(71)
+)
+MEM_WB_Register
+(
+
+	.clk(clk),
+	.reset(reset),
+	.enable(1'b 1),
+	.DataInput_dw(
+		{	
+			w_EX_R_Out_RegWrite,
+			w_EX_R_Out_memToReg,
+			w_FromExternalMemToMux_32,
+			w_EX_R_Out_ALUResult_32,
+			w_EX_R_Out_WriteRegisterAddress_5
+		}),
+
+	.DataOutput_dw(
+		{
+			w_MEM_R_Out_RegWrite,
+			w_MEM_R_Out_memToReg,
+			w_MEM_R_Out_MemoryData_32,
+			w_MEM_R_Out_ALUResult_32,
+			w_MEM_R_Out_WriteRegisterAddress_5
+		})
+);
+
+//******************************************************************/
+//********************    Write Back        ************************/
 
 // If mem to register we write register from memory
 Multiplexer2to1
@@ -429,30 +615,37 @@ Multiplexer2to1
 )
 writeRegisterSource
 (
-	.in_Selector(w_ID_R_Out_memToReg),
-	.MUX_Data0_dw(w_ALUResult_32),
-	.MUX_Data1_dw(w_FromExternalMemToMux_32),
+	.in_Selector(w_MEM_R_Out_memToReg),
+	.MUX_Data0_dw(w_MEM_R_Out_ALUResult_32),
+	.MUX_Data1_dw(w_MEM_R_Out_MemoryData_32),
 	
 	.MUX_Output_dw(w_writeRegisterFileFromMemOrALu_32)
 
 );
 
-// RegisterPipeline
-// #(
-// 	.N(64)
-// )
-// EX_MEM_Register
-// (
-
-// 	.clk(clk),
-// 	.reset(reset),
-// 	.enable(1'b 1),
-// 	.DataInput_dw(),
-
-// 	.DataOutput_dw()
-// );
 //******************************************************************/
-//********************    Write Back        ************************/
+//********************    Forwarding Unit        ************************/
+ForwardingUnit
+ForwardUnit
+(
+	.in_EX_MEM_RegWrite(w_EX_R_Out_RegWrite),
+	.in_EX_MEM_Rd_address_5(w_EX_R_Out_WriteRegisterAddress_5),
+
+	.in_MEM_WB_RegWrite(w_MEM_R_Out_RegWrite),
+	.in_MEM_WB_Rd_address_5(w_MEM_R_Out_WriteRegisterAddress_5),
+
+	.in_ID_EX_Rs_address_5(w_ID_R_Out_Instruction_26[25:21]),
+	.in_ID_EX_Rt_address_5(w_ID_R_Out_Instruction_26[20:16]),
+	
+	.in_EX_MEM_Rt_address_5(w_EX_R_Out_RtRegisterAddress_5),
+
+	.in_EX_MEM_memWrite(w_EX_R_Out_memWrite),
+
+	.o_forward_lw(w_forwardingForLWCtrl),
+	.o_forwardA_2(w_forwardingACtrlA_2),
+	.o_forwardB_2(w_forwardingACtrlB_2)
+);
+
 
 assign ALUResultOut = w_ALUResult_32;
 
